@@ -1,16 +1,12 @@
 {
-  "name": "PRINCEAI",
-  "description": "whatsapp user bot",
-  "repository": "https://github.com/DASTAGHIR/PRINCEAI",
-  "logo": "https://files.catbox.moe/76879w.png",
-  "success_url": "https://github.com/DASTAGHIR/PRINCEAI",
-  "keywords": [
-    "nodejs", "heroku", "bot", "urdu", "english", "indonesian", "arab", "portuguese", "italian", "french", "whatsapp",
-    "termux", "superbot", "multi-device", "md", "official", "javascript", "princebot"
-  ],
-  "image": "heroku/nodejs",
-  "stack": "container",
-  "env": {
+    "bot-name": "PRINCEAI",
+    "description": "whatsapp user bot",
+    "logo": "https://qu.ax/lwgPL.jpg",
+    "keywords": ["bot"],
+    "documentation-link": "https://shortsession.onrender.com",
+    "owner-verification":"shoroking38@gmail.com",
+  
+      "env": {
     "SESSION_ID": {
       "description": "put your session ID here in the box below",
       "required": true,
@@ -24,7 +20,7 @@
     "OWNER_NUMBER": {
       "description": "put your Number and name for Owner",
       "required": true,
-      "value": "639129985130,DEVELOPER"
+      "value": "6281220527432,Prince♥️The Developer"
     },
     "owner_react_emojie": {
       "description": "put one emojie for owner reacts",
@@ -36,25 +32,10 @@
       "required": true,
       "value": "public"
     },
-    "BUSINESS_MODE": {
-      "description": "If your deploying bot in WhatsApp Bussinus then make it 👉🏻 true",
-      "required": true,
-      "value": "false"
-    },
-    "MENU_IMAGE": {
-      "description": "put image url,url 👈🏻 like this as much as you want for menu image or leave it blank for default images",
-      "required": false,
-      "value": ""
-    },
     "PREFIX": {
       "description": "put any one symbol here leave it Blank if you want to use multiple prefix",
       "required": false,
-      "value": ""
-    },
-    "AlwaysOnline": {
-      "description": "make it true to be always online",
-      "required": false,
-      "value": "false" 
+      "value": "" 
     },
     "antidelete": {
       "description": "Set 'private' to forward deleted messages only from private chats, 'all' to forward from both private and group chats, or 'false' to disable this feature.",
@@ -64,42 +45,27 @@
     "DATABASE_URL": {
       "description": "put mongodb or postgres or princedb database url for bots better performance",
       "required": false,
-      "value": "database.json"
+      "value": ""
     },
     "ANTI_LINK": {
       "description": "it will dlt links and kick user",
       "required": false,
       "value": "true"
     },
-     "AutoReaction": {
-     "description": "Set to 'true' for reactions in all chats, 'group' for group chats only, 'private' for private chats only, or 'false' to disable",
-     "required": false,
-     "value": "false"
+    "AutoReaction": {
+      "description": "make it true to react on chats",
+      "required": false,
+      "value": "false"
     },
     "autoreactions_emojies": {
       "description": "put your favourite emojies for AutoReactions on chats or make it empty for all default emojies",
       "required": false,
-      "value": "♥️,🤗,❤️,💞,❣️,💙,💛,🤍,💚,😍,🥰,💝,💖,💗,💓,💞,💕,❣️,💘,💟,🖤,🤎,💜,💫,🌸"
-    },
-    "VAR_APP": {
-      "description": "put same app name you entered above",
-      "required": true,
-      "value": ""
-    },
-    "VAR_KEY": {
-      "description": "put heroku key click on accounts scroll down copy that key past here",
-      "required": true,
-      "value": ""
+      "value": "💛,🤍,💗,♥️,💞"
     },
     "STATUSVIEW": {
       "description": "make it true to auto view status and likes",
       "required": false,
       "value": "true"
-    },
-    "StatusLikes": {
-      "description": "make it true to auto likes on status",
-      "required": false,
-      "value": "false"
     },
     "StatusEmojies": {
       "description": "Add your favorites emojies for status likes",
@@ -112,7 +78,7 @@
       "value": "Your Status has been seen by Prince bot"
     },
     "REJECTSCALLS": {
-      "description": "type in truemsg get call reject with message or just make it true to only reject the call",
+      "description": "reject calls",
       "required": false,
       "value": "false"
     },
@@ -136,16 +102,5 @@
       "required": true,
       "value": "_*📥DOWNLOADED SUCCESSFULLY✅*_"
     } 
-  },
-  "buildpacks": [
-    {
-      "url": "heroku/nodejs"
-    },
-    {
-      "url": "https://github.com/bogini/heroku-buildpack-graphicsmagick"
-    },
-    {
-      "url": "https://github.com/heroku/heroku-buildpack-activestorage-preview"
-    }
-  ]
   }
+}

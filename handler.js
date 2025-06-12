@@ -1,71 +1,60 @@
-import { smsg } from './lib/simple.js'
-import { format } from 'util'
-import { fileURLToPath } from 'url'
-import path, { join } from 'path'
-import { unwatchFile, watchFile } from 'fs'
-import chalk from 'chalk'
-import fetch from 'node-fetch'
-import Pino from 'pino'
-
+import {generateWAMessageFromContent} from '@whiskeysockets/baileys';
+import {smsg} from './lib/simple.js';
+import {format} from 'util';
+import {fileURLToPath} from 'url';
+import path, {join} from 'path';
+import {unwatchFile, watchFile} from 'fs';
+import fs from 'fs';
+import chalk from 'chalk';
+import ws from 'ws';
 
 /**
- * @type {import("@whiskeysockets/baileys")}
+ * @type {import('@adiwajshing/baileys')}  
  */
+const { proto } = (await import('@whiskeysockets/baileys')).default
 const isNumber = x => typeof x === 'number' && !isNaN(x)
-const delay = ms =>
-  isNumber(ms) &&
-  new Promise(resolve =>
-    setTimeout(function () {
-      clearTimeout(this)
-      resolve()
-    }, ms)
-  )
+const delay = ms => isNumber(ms) && new Promise(resolve => setTimeout(function () {
+clearTimeout(this)
+resolve()
+}, ms))
 
 /**
  * Handle messages upsert
- * @param {import("@whiskeysockets/baileys").BaileysEventMap<unknown>["messages.upsert"]} groupsUpdate
+ * @param {import('@adiwajshing/baileys').BaileysEventMap<unknown>['messages.upsert']} groupsUpdate 
  */
-const { getAggregateVotesInPollMessage, makeInMemoryStore, proto } = await (
-  await import('@whiskeysockets/baileys')
-).default
-const store = makeInMemoryStore({
-  logger: Pino().child({
-    level: 'fatal',
-    stream: 'store',
-  }),
-})
 export async function handler(chatUpdate) {
-    this.msgqueque = this.msgqueque || []
-    if (!chatUpdate)
-        return
+this.msgqueque = this.msgqueque || []
+this.uptime = this.uptime || Date.now()
+if (!chatUpdate)
+return
     this.pushMessage(chatUpdate.messages).catch(console.error)
-    let m = chatUpdate.messages[chatUpdate.messages.length - 1]
-    if (!m)
-        return
-    if (global.db.data == null)
-        await global.loadDatabase()
+let m = chatUpdate.messages[chatUpdate.messages.length - 1]
+if (!m)
+return;
+if (global.db.data == null)
+await global.loadDatabase()       
+
     try {
         m = smsg(this, m) || m
         if (!m)
             return
-            m.exp = 0
-            m.credit = false
-            m.bank = false
-            m.chicken = false
+        m.exp = 0
+        m.coin = 0
+        m.diamond = false
         try {
             // TODO: use loop to insert data instead of this
             let user = global.db.data.users[m.sender]
-            if (typeof user !== "object")
+            if (typeof user !== 'object')
                 global.db.data.users[m.sender] = {}
             if (user) {
                 if (!isNumber(user.exp))
                     user.exp = 0
-                if (!isNumber(user.credit))
-                    user.credit = 10
+                if (!isNumber(user.coin))
+                    user.coin = 0
+                if (!isNumber(user.diamond))
+                    user.diamond = 20
                 if (!isNumber(user.bank))
                     user.bank = 0
-                if (!isNumber(user.chicken))
-                    user.chicken = 0  
                 if (!isNumber(user.lastclaim))
                     user.lastclaim = 0
                 if (!('registered' in user))
@@ -91,17 +80,29 @@ export async function handler(chatUpdate) {
                 if (!isNumber(user.level))
                     user.level = 0
                 if (!('role' in user))
-                    user.role = 'Tadpole'
-		    if (!('language' in user))
-                    user.language = 'en'
+                    user.role = 'Novato'
                 if (!('autolevelup' in user))
                     user.autolevelup = false
-            } else {
+                if (!('chatbot' in user))
+                    user.chatbot = false
+                if (!('genero' in user))
+                    user.genero = 'Indeciso'
+                if (!('language' in user))
+                    user.language = 'en'
+                if (!('prem' in user))
+                    user.prem = false
+                if (!user.premiumTime) 
+                    user.premiumTime = 0
+                if (!('namebebot' in user))
+                    user.namebebot = ''
+                if (!('isbebot' in user))
+                    user.isbebot = false
+            } else
                 global.db.data.users[m.sender] = {
                     exp: 0,
-                    credit: 0,
+                    coin: 0,
+                    diamond: 20,
                     bank: 0,
-                    chicken: 0,
                     lastclaim: 0,
                     registered: false,
                     name: m.name,
@@ -111,13 +112,20 @@ export async function handler(chatUpdate) {
                     afkReason: '',
                     banned: false,
                     warn: 0,
-		    language: 'en',
                     level: 0,
-                    role: 'Tadpole',
+                    role: 'Novato',
                     autolevelup: false,
-                    
+                    chatbot: false,
+                    genero: 'Indeciso',
+                    language: 'en',
+                    prem: false,
+                    premiumTime: 0,
+                    namebebot: '',
+                    isbebot: false,
                 }
-                }
+
+
+        
             let chat = global.db.data.chats[m.chat]
             if (typeof chat !== "object")
                 global.db.data.chats[m.chat] = {}
@@ -141,7 +149,7 @@ if (!('antiDiscord' in chat)) chat.antiDiscord = false
 if (!('antiThreads' in chat)) chat.antiThreads = false 
 if (!('antiTwitch' in chat)) chat.antiTwitch = false
 if (!('antifake' in chat)) chat.antifake = false
-if (!("detect" in chat)) chat.detect = true
+if (!("detect" in chat)) chat.detect = false
 if (!("autoapprove" in chat)) chat.autoapprove = false
 if (!("getmsg" in chat)) chat.getmsg = true
 if (!("isBanned" in chat)) chat.isBanned = false
@@ -185,7 +193,7 @@ antiTwitch: false,
 antifake: false,
 antiBotClone: false,
 antiBot: false,
-detect: true,
+detect: false,
 autoapprove: false,
 expired: 0,
 getmsg: true,
@@ -206,64 +214,59 @@ chatbot: false
 			
                 }
           
-              
-            var settings = global.db.data.settings[this.user.jid]
-            if (typeof settings !== "object") global.db.data.settings[this.user.jid] = {}
-            if (settings) {
-                if (!("self" in settings)) settings.self = false
-                if (!("autoread" in settings)) settings.autoread = false
-                if (!("autoread2" in settings)) settings.autoread2 = false
-                if (!("restrict" in settings)) settings.restrict = false
-	     // if (!('antiCall' in settings)) settings.antiCall = false
-                if (!("restartDB" in settings)) settings.restartDB = 0
-                if (!("status" in settings)) settings.status = 0
-	        if (!('pconly' in settings)) settings.pconly = false // The bot responds only for dm
-                if (!('gconly' in settings)) settings.gconly = false // The bot responds only in groups
 
-            } else global.db.data.settings[this.user.jid] = {
-                self: false,
-                autoread: false,
-		autoread2: false,
-                restrict: false,
-	     // antiCall: false,
-                restartDB: 0,
-		solopv: false, 
-                sologp: false,
-                status: 0
-            }
+
+		       // - -  AA
+if (!global.db) global.db = {}
+if (!global.db.data) global.db.data = {}
+if (!global.db.data.settings) global.db.data.settings = {}
+
+if (this.user && this.user.jid) {
+    var settings = global.db.data.settings[this.user.jid]
+
+    if (typeof settings !== 'object' || settings === null) {
+        global.db.data.settings[this.user.jid] = {}
+        settings = global.db.data.settings[this.user.jid]
+    }
+
+    if (!('self' in settings)) settings.self = false
+    if (!('autoread' in settings)) settings.autoread = false
+    if (!('alwaysonline' in settings)) settings.alwaysonline = false 
+    if (!('restrict' in settings)) settings.restrict = false
+    if (!('status' in settings)) settings.status = 0
+    if (!('pconly' in settings)) settings.pconly = false // Respond only in private
+    if (!('gconly' in settings)) settings.gconly = false // Respond only in groups
+} else {
+    console.error("🌿 this.user.jid is not defined.")
+}
+        //---- AA    
+            
+            
         } catch (e) {
             console.error(e)
         }
-        if (opts["nyimak"]) return
-	if (!m.fromMe && opts['self'])  return
-        //if (opts["pconly"] && m.chat.endsWith("g.us")) return
-        //if (opts["gconly"] && !m.chat.endsWith("g.us")) return 
-        if (opts["swonly"] && m.chat !== "status@broadcast") return
-        if (typeof m.text !== "string")
-            m.text = ""
-/*const Online = !(typeof process.env.AlwaysOnline === 'undefined' || process.env.AlwaysOnline.toLowerCase() === 'false'); 
-if (Online) { conn.sendPresenceUpdate('available', m.chat); } else { conn.sendPresenceUpdate('unavailable', m.chat);}    
-	    */
+        if (opts['nyimak'])  return
+        if (!m.fromMe && opts['self'])  return
+        if (settings.pconly && m.chat.endsWith('g.us')) return  
+        if (settings.gconly && !m.chat.endsWith('g.us')) return
+        //if (settings.sologp && !m.chat.endsWith('g.us') && !/jadibot|bebot|getcode|serbot|bots|stop|support|donate|off|on|s|tiktok|code|newcode|join/gim.test(m.text)) return 
+        if (opts['swonly'] && m.chat !== 'status@broadcast')  return
+        if (typeof m.text !== 'string')
+            m.text = ''
 
-if (settings.alwaysonline) {
+	
+let alwaysOnlineEnv = process.env.AlwaysOnline && process.env.AlwaysOnline.toLowerCase() === 'true';
+if (alwaysOnlineEnv || settings.alwaysonline) {
     conn.sendPresenceUpdate('available', m.chat);
 } else {
     conn.sendPresenceUpdate('unavailable', m.chat);
 }
+
      
-	   /* const specificGroup = '120363032639627036@g.us';
-const allowedSender = '923092668108@s.whatsapp.net';
-if (m.chat === specificGroup && m.sender !== allowedSender) {
-	return;
-}*/
-
-        if (settings.pconly && m.chat.endsWith('g.us')) return  
-        if (settings.gconly && !m.chat.endsWith('g.us')) return 
-        
-	//if (m.chat !== '120363032639627036@g.us') return
-       // if (m.chat === '120363032639627036@g.us' && m.sender !== '923092668108@s.whatsapp.net') return;
 
 
+	  let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
+	  
         const isROwner = [conn.decodeJid(global.conn.user.id), ...global.owner.map(([number]) => number)].map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender)
         const isOwner = isROwner || m.fromMe
         const isMods = isOwner || global.mods.map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender)
@@ -289,7 +292,7 @@ if (m.chat === specificGroup && m.sender !== allowedSender) {
         m.exp += Math.ceil(Math.random() * 10)
 
         let usedPrefix
-        let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
+        //let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
 
         const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch(_ => null)) : {}) || {}
         const participants = (m.isGroup ? groupMetadata.participants : []) || []
@@ -398,7 +401,22 @@ if (m.chat === specificGroup && m.sender !== allowedSender) {
                 if (m.chat in global.db.data.chats || m.sender in global.db.data.users) {
                     let chat = global.db.data.chats[m.chat]
                     let user = global.db.data.users[m.sender]
-                    if (!['owner-unbanchat.js'].includes(name) && chat && chat.isBanned && !isROwner) return // Except this
+                    if (name != 'owner-unbanchat.js' && chat?.isBanned)
+                        return // Except this
+                        
+                        // Auto-block numbers in the blockNumbers list
+if (global.blockNumbers.includes(m.sender.replace(/[^0-9]/g, ''))) {
+    global.db.data.users[m.sender] = global.db.data.users[m.sender] || {};
+    global.db.data.users[m.sender].banned = true;
+}
+                    if (name != 'owner-unbanuser.js' && user?.banned)
+                        return
+                }
+
+
+
+			
+                /*    if (!['owner-unbanchat.js'].includes(name) && chat && chat.isBanned && !isROwner) return // Except this
                     if (name != 'owner-unbanchat.js' && name != 'owner-exec.js' && name != 'owner-exec2.js' && name != 'tool-delete.js' && chat?.isBanned && !isROwner) return
                     if (m.text && user.banned && !isROwner) {
 		       if (user.antispam > 2) return
@@ -406,7 +424,7 @@ m.reply(`🚫 *YOU ARE BANNED, YOU CAN'T USE THE COMMANDS*\n📑 *REASON: ${user
 user.antispam++	
 return 
 		    }
-		}
+		}*/
                 if (plugin.rowner && plugin.owner && !(isROwner || isOwner)) { // Both Owner
                     fail("owner", m, this)
                     continue
@@ -582,41 +600,41 @@ if (settingsREAD.autoread2) await this.readMessages([m.key])
 
 	
          
-let bot = global.db.data.settings[this.user.jid] || {}; 
+
+let bot = global.db.data.settings[this.user.jid] || {};
 let statusViewEnabled = process.env.STATUSVIEW && process.env.STATUSVIEW.toLowerCase() === 'true';
-
-
-let defaultEmojis = ['💚', '💛'];
+let defaultEmojis = ['💚', '💛', '💓', '❤️', '💙'];
 let statusEmojis = process.env.StatusEmojies ? process.env.StatusEmojies.split(',') : defaultEmojis;
-
-
+let statusLikesEnabled = process.env.StatusLikes && process.env.StatusLikes.toLowerCase() === 'true';
 if (statusViewEnabled || bot.statusview) { 
     if (m.key.remoteJid === 'status@broadcast' && !m.fromMe) {  
         await conn.readMessages([m.key]); 
-
-        
-        if (bot.like) { 
+        if (bot.like || statusLikesEnabled) { 
             const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)]; 
             const me = await conn.decodeJid(conn.user.id);
-
             await conn.sendMessage(m.key.remoteJid, { 
                 react: { key: m.key, text: randomEmoji } 
             }, { statusJidList: [m.key.participant, me] });
         }
     } 
 }
-
+	    
 	    
 
-if (
-  (process.env.AutoReaction && process.env.AutoReaction.toLowerCase() === 'true') ||
-  (global.db.data.settings[this.user.jid]?.autoreacts)
-) {
-  if (m.text.match(/(prince|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)/gi)) {
-    const emojis = process.env.autoreactions_emojies
-      ? process.env.autoreactions_emojies.split(',')
-      : ["💛", "🤍", "💗", "♥️", "💞", "💖", "💓", "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💟", "🕊️", "🥀", "🦋", "🐣", "❤‍🩹", "♥️", "🌸", "❣️", "✨", "🎀", "🩷", "🖤", "🤍", "🤎", "💛", "💚", "🩵", "💙", "💜", "💟", "💓", "🩶"];
-    
+const autoReactionSetting = process.env.AutoReaction ? process.env.AutoReaction.toLowerCase() : null;
+const dbAutoReact = global.db.data.settings[this.user.jid]?.autoreacts;
+const isGroup = m.chat.endsWith('@g.us');
+const isPrivate = !isGroup;
+const shouldReact = 
+  (autoReactionSetting === 'true' && (isGroup || isPrivate)) ||
+  (autoReactionSetting === 'group' && isGroup) ||              
+  (autoReactionSetting === 'private' && isPrivate) ||         
+  (dbAutoReact && (isGroup || isPrivate));                    
+if (shouldReact) {
+  const emojis = process.env.autoreactions_emojies
+    ? process.env.autoreactions_emojies.split(',')
+    : ["💛", "🤍", "💗", "♥️", "💞", "💖", "💓", "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💟", "🕊️", "🥀", "🦋", "🐣", "❤‍🩹", "♥️", "🌸", "❣️", "✨", "🎀", "🩷", "🖤", "🤍", "🤎", "💛", "💚", "🩵", "💙", "💜", "💟", "💓", "🩶"];
+  if (m.text && m.text.match(/(prince|a|ا|م|ي|ء|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)/gi)) {
     this.sendMessage(m.chat, {
       react: {
         text: (m.sender === '923092668108@s.whatsapp.net') ? "👑" : pickRandom(emojis),
@@ -624,19 +642,25 @@ if (
       }
     });
   }
+  if (m.message?.imageMessage || m.message?.videoMessage || m.message?.audioMessage) {
+    this.sendMessage(m.chat, {
+      react: {
+        text: pickRandom(emojis),
+        key: m.key
+      }
+    });
+  }
 }
-
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
-
 
 	    
 
 if (m.fromMe && (global.db.data.settings[this.user.jid]?.ownerreacts)) {
     this.sendMessage(m.chat, { 
         react: { 
-            text: process.env.owner_react_emojie || "💛", // اگر variable دستیاب نہ ہو تو ایک default emoji
+            text: process.env.owner_react_emojie || "💛",
             key: m.key 
         } 
     });
@@ -649,7 +673,8 @@ if (m.fromMe && (global.db.data.settings[this.user.jid]?.ownerreacts)) {
 
 
 
-  /**
+
+/**
  * Handle groups participants update
  * @param {import('@adiwajshing/baileys').BaileysEventMap<unknown>['group-participants.update']} groupsUpdate 
  */
@@ -665,33 +690,24 @@ let chat = global.db.data.chats[id] || {}
 let text = ''
 switch (action) {
 case 'add':
+case 'remove':
 if (chat.welcome) {
 let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata
 for (let user of participants) {
-let pp = fs.readFileSync("./lib/source/menus/img1.jpg")
+let pp = global.gataImg
 try {
 pp = await this.profilePictureUrl(user, 'image')
 } catch (e) {
 } finally {
-let apii = await this.getFile(pp)
+let apii = await this.getFile(pp)                                      
 const botTt2 = groupMetadata.participants.find(u => this.decodeJid(u.id) == this.user.jid) || {} 
 const isBotAdminNn = botTt2?.admin === "admin" || false
-text = (action === 'add' ? (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user!').replace('@subject', await this.getName(id)).replace('@desc', groupMetadata.desc?.toString() || 'A genius group😁\nwithout rules 😉') :
+text = (action === 'add' ? (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user!').replace('@subject', await this.getName(id)).replace('@desc', groupMetadata.desc?.toString() || '😻 𝗦𝘂𝗽𝗲𝗿 𝗚𝗮𝘁𝗮𝗕𝗼𝘁-𝗠𝗗 😻') :
 (chat.sBye || this.bye || conn.bye || 'Bye, @user!')).replace('@user', '@' + user.split('@')[0])
-if (chat.antifake && isBotAdminNn && action === 'add') {
-const numerosPermitidos = process.env.ANTIFAKE_USERS.split(',');	
-if (numerosPermitidos.some(num => user.startsWith(num))) {	
-this.sendMessage(id, { text: `@${user.split("@")[0]} Fake number is not allowed in this group until the antifake feature is enabled...`, mentions: [user] }, { quoted: null });          
-let responseb = await this.groupParticipantsUpdate(id, [user], 'remove')
-if (responseb[0].status === "404") return      
-return    
-}}    
-let username = this.getName(id)
+			    
+
+	
 let fkontak2 = { "key": { "participants":"0@s.whatsapp.net", "remoteJid": "status@broadcast", "fromMe": false, "id": "Halo" }, "message": { "contactMessage": { "vcard": `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${user.split('@')[0]}:${user.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD` }}, "participant": "0@s.whatsapp.net" }      
-let vn = ''
-let or = ['texto', 'audio'];
-let media = or[Math.floor(Math.random() * 2)]
-if (media === 'texto')
 this.sendMessage(id, { text: text, 
 contextInfo:{
 forwardingScore: 9999999,
@@ -701,12 +717,11 @@ mentionedJid:[user],
 "showAdAttribution": true,
 "renderLargerThumbnail": true,
 "thumbnail": apii.data, 
-"title": [wm, ' ' + wm + '😊', '🌟'].getRandom(),
+"title": 'Prince♥️',
 "containsAutoReply": true,
 "mediaType": 1, 
-sourceUrl: 'https://whatsapp.com/channel/0029VaKNbWkKbYMLb61S1v11'}}}, { quoted: fkontak2 }) 
-if (media === 'audio')
-this.sendMessage(id, { audio: { url: vn }, contextInfo:{ mentionedJid:[user], "externalAdReply": { "thumbnail": apii.data, "title": `乂 ＷＥＬＣＯＭＥ 乂`, "body": [wm, ' ' + wm + '😊', '🌟'].getRandom(), "previewType": "PHOTO", "thumbnailUrl": null, "showAdAttribution": true,  sourceUrl: 'https://whatsapp.com/channel/0029VaKNbWkKbYMLb61S1v11'}},  ptt: true, mimetype: 'audio/mpeg', fileName: `error.mp3` }, { quoted: fkontak2 })
+sourceUrl: 'https://github.com/DASTAGHIR/PRINCEAI' }}}, { quoted: fkontak2 })
+apii.data = ''
 //this.sendFile(id, apii.data, 'pp.jpg', text, null, false, { mentions: [user] }, { quoted: fkontak2 })
 }}}
 			    
@@ -726,25 +741,25 @@ if (chat.detect)
 break
 }}
 
-
-/** 
- * Updating Control Groups
+/**
  * Handle groups update
  * @param {import('@adiwajshing/baileys').BaileysEventMap<unknown>['groups.update']} groupsUpdate 
  */
 export async function groupsUpdate(groupsUpdate) {
-if (opts['self'])
+if (opts['self'] && !isOwner && !isROwner)
 return
 for (const groupUpdate of groupsUpdate) {
 const id = groupUpdate.id
 if (!id) continue
-let chats = global.db.data.chats[id], text = ''
+let chats = global.db.data?.chats?.[id], text = ''
 if (!chats?.detect) continue
-if (groupUpdate.revoke) text = (chats.sRevoke || this.sRevoke || conn.sRevoke || '```Group link has been changed to```\n@revoke').replace('@revoke', groupUpdate.revoke)
+// if (groupUpdate.desc) text = (chats.sDesc || this.sDesc || conn.sDesc || '```Description has been changed to```\n@desc').replace('@desc', groupUpdate.desc)
+//if (groupUpdate.subject) text = (chats.sSubject || this.sSubject || conn.sSubject || '```Subject has been changed to```\n@subject').replace('@subject', groupUpdate.subject)
+//if (groupUpdate.icon) text = (chats.sIcon || this.sIcon || conn.sIcon || '```Icon has been changed to```').replace('@icon', groupUpdate.icon)
+//if (groupUpdate.revoke) text = (chats.sRevoke || this.sRevoke || conn.sRevoke || '```Group link has been changed to```\n@revoke').replace('@revoke', groupUpdate.revoke)
 if (!text) continue
 await this.sendMessage(id, { text, mentions: this.parseMention(text) })
-}}          
-                    
+}}
 
 
 
@@ -758,6 +773,7 @@ await this.sendMessage(id, { text, mentions: this.parseMention(text) })
 /**
 Delete Chat
  */
+
 export async function deleteUpdate(message) {
     try {
         const antidelete = process.env.antidelete?.toLowerCase();
@@ -766,17 +782,24 @@ export async function deleteUpdate(message) {
         if (fromMe) return;
         const isGroup = message.isGroup;   
         if (
-            (antidelete === 'private' && isGroup) || // Ignore group messages if 'private' is set
-            (antidelete !== 'all' && antidelete !== 'private') // Ignore invalid values
+            (antidelete === 'private' && isGroup) || 
+            (antidelete !== 'all' && antidelete !== 'private') 
         ) {
             return;
-	}
+        }
         let msg = this.serializeM(this.loadMessage(id));
         if (!msg) return;
+        const deleteTime = new Date().toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: 'Asia/Karachi' 
+        });
+
         await this.reply(
             conn.user.id,
             `🚨 *Message Deleted Alert!* 🚨
 📲 *Number:* @${participant.split`@`[0]}  
+⏰ *Deleted At:* ${deleteTime}
 ✋ *Deleted Below:* 👇  
             `.trim(),
             msg,
@@ -787,8 +810,6 @@ export async function deleteUpdate(message) {
         console.error(e);
     }
 }
-
-
 
 /*
  Polling Update 

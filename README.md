@@ -6,7 +6,7 @@
             alt="PRINCE BOT" 
             width="720"
             height="420" 
-            src="https://qu.ax/UGCpR.jpg" 
+            src="https://files.catbox.moe/230rfz.jpg" 
             style="border: 4px solid #FF69B4; 
                    border-radius: 20px; 
                    box-shadow: 0 8px 24px rgba(255, 105, 180, 0.3);"
@@ -22,10 +22,10 @@
 ---
 
 ## 🌟 **SESSION LINKS** 🌟
-### 🔷 SHORT SESSIONS
-[![SESSION 1](https://img.shields.io/badge/_𝗦𝗘𝗦𝗦𝗜𝗢𝗡_1-8A2BE2?style=for-the-badge&logo=heroku)](https://princessession-0a4aeffc655b.herokuapp.com)
-[![SESSION 2](https://img.shields.io/badge/_𝗦𝗘𝗦𝗦𝗜𝗢𝗡_2-FF69B4?style=for-the-badge&logo=heroku)](https://shortsession-fd57a1c06fba.herokuapp.com)  
-[![SESSION 3](https://img.shields.io/badge/_𝗦𝗘𝗦𝗦𝗜𝗢𝗡_3-E6E6FA?style=for-the-badge&logo=render)](https://shortsession.onrender.com)
+### 🔷 PAIR CODE 
+[![SESSION 1](https://img.shields.io/badge/_PAIR_CODE_1-8A2BE2?style=for-the-badge&logo=heroku)](https://prince-pair-code.koyeb.app)
+[![SESSION 2](https://img.shields.io/badge/_PAIR_CODE_2-FF69B4?style=for-the-badge&logo=heroku)](https://prince-bot-pair-code.koyeb.app)  
+[![SESSION 3](https://img.shields.io/badge/_PAIR_CODE_3-E6E6FA?style=for-the-badge&logo=render)](https://shortsession.onrender.com)
 
 
 ---
